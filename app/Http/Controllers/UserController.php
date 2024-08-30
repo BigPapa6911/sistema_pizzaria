@@ -34,10 +34,7 @@ class UserController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
-    {
-
-    }
+    public function create() {}
 
     /**
      * Store a newly created resource in storage.
@@ -79,15 +76,75 @@ class UserController extends Controller
      * Update the specified resource in storage.
      */
     public function update(Request $request, string $id)
-    {
-        //
+{
+    // Obter todos os dados do request
+    $data = $request->all();
+
+    try {
+        // Validação dos dados recebidos
+        $rules = [
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email,' . $id,
+            // Outras regras de validação conforme necessário
+        ];
+
+        $validator = \Validator::make($data, $rules);
+
+        if ($validator->fails()) {
+            // Se a validação falhar, retorna os erros
+            return [
+                'status' => 422,
+                'mensagem' => 'Erro de validação!',
+                'errors' => $validator->errors(),
+            ];
+        }
+
+        // Verifica se o usuário existe e atualiza
+        $user = User::findOrFail($id);
+        $user->update($validator->validated());
+
+        // Retorna sucesso
+        return [
+            'status' => 200,
+            'mensagem' => 'Usuário atualizado com sucesso!',
+        ];
+
+    } catch (\Exception $e) {
+        // Captura todas as exceções gerais
+        return [
+            'status' => 400,
+            'mensagem' => 'Erro ao atualizar usuário!',
+            'error' => $e->getMessage(),
+        ];
     }
+}
+
+    
+
 
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(string $id)
-    {
-        //
+{
+    try {
+        // Tenta encontrar e deletar o usuário
+        $user = User::findOrFail($id);
+        $user->delete();
+
+        // Retorna sucesso
+        return [
+            'status' => 200,
+            'mensagem' => 'Usuário deletado com sucesso!',
+        ];
+
+    } catch (\Exception $e) {
+        // Captura todas as exceções gerais
+        return [
+            'status' => 400,
+            'mensagem' => 'Erro ao deletar usuário!',
+            'error' => $e->getMessage(),
+        ];
     }
+}
 }
